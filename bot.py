@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 class ResearchBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
+        intents.message_content = True
+        intents.messages = True
         # Remove privileged intent requirement
         super().__init__(command_prefix='r! ', intents=intents)
         
