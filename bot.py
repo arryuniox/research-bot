@@ -12,6 +12,7 @@ import re
 import logging
 from pathlib import Path
 import hashlib
+from dotenv import load_dotenv
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +22,7 @@ class ResearchBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         # Remove privileged intent requirement
-        super().__init__(command_prefix='!research ', intents=intents)
+        super().__init__(command_prefix='r! ', intents=intents)
         
         # Initialize session for HTTP requests
         self.session = None
@@ -45,6 +46,15 @@ class ResearchBot(commands.Bot):
             print("🌐 Connected to servers:")
             for guild in self.guilds:
                 print(f"   - {guild.name} (ID: {guild.id})")
+
+                me = guild.get_member(self.user.id)
+                if me:
+                    perms = me.guild_permissions
+                    print(f"   🔐 Permissions:")
+                    print(f"      - Send Messages: {perms.send_messages}")
+                    print(f"      - Read Messages: {perms.read_messages}")
+                    print(f"      - Read Message History: {perms.read_message_history}")
+                    print(f"      - Embed Links: {perms.embed_links}")
         
         print("✅ Bot startup complete!")
         
@@ -236,6 +246,24 @@ class ProjectManager:
 
 # Initialize bot
 bot = ResearchBot()
+
+@bot.command(name='ping', help='Test command to check if bot responds')
+async def ping(ctx):
+    """Test command to check if bot responds"""
+    print(f"🏓 Ping command received from {ctx.author}")
+    await ctx.send('🏓 Pong! Bot is working!')
+
+@bot.command(name='debug', help='Debug command to check message visibility')
+async def debug_info(ctx):
+    print(f"🔍 Debug command received from {ctx.author}")
+    embed = discord.Embed(title="🔍 Debug Information", color=0x00ff00)
+    embed.add_field(name="Server", value=ctx.guild.name if ctx.guild else "DM")
+    embed.add_field(name="Channel", value=ctx.channel.name)
+    embed.add_field(name="User", value=str(ctx.author))
+    embed.add_field(name="Bot User", value=str(bot.user))
+    embed.add_field(name="Prefix", value="`!test `")
+    embed.add_field(name="Message Content", value=f"`{ctx.message.content}`")
+    await ctx.send(embed=embed)
 
 @bot.command(name='search', help='Search for papers: !research search <keywords> [year_start] [year_end] [max_results]')
 async def search_papers(ctx, *, args: str):
@@ -574,9 +602,11 @@ async def on_command_error(ctx, error):
         logger.error(f"Command error: {error}")
         await ctx.send(f"❌ An error occurred: {str(error)}")
 
+load_dotenv()
+
 if __name__ == "__main__":
     # Replace with your bot token
-    TOKEN = "MTQxNjUxNzE3MTU3OTk4MTk3Ng.GZ-x6k.G-0g8UWGZfTSdPnTKIEDIEzHygNnolDpFxUD88"
+    TOKEN = os.getenv("TOKEN")
     
     if TOKEN == "YOUR_DISCORD_BOT_TOKEN_HERE":
         print("❌ Please set your Discord bot token in the TOKEN variable")
